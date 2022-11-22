@@ -25,12 +25,15 @@ public class PersonaService {
 
 
     public void delete(long id) throws PersonDoesNotExistException {
-        if (!repository.existsById(id)) throw new PersonDoesNotExistException();
+        if (!repository.existsById(id)) throw new PersonDoesNotExistException(id);
         repository.deleteById(id);
     }
 
-    public void update(Person person) {
-
+    public Person update(Person person) throws RepeatedPersonException, UnderageException {
+        if (Period.between(person.getBornDate(), LocalDate.now()).getYears() < MIN_AGE) throw new UnderageException();
+        if (repository.isRepeated(person.getCountry(), person.getDocument().getNumber(), person.getDocument().getType()))
+            throw new RepeatedPersonException();
+        return repository.updateById(person, person.getId());
     }
 
     public Person add(Person person) throws UnderageException, RepeatedPersonException {
@@ -45,16 +48,16 @@ public class PersonaService {
     }
 
     public Optional<Relationship> getRelationship(long id1, long id2) throws PersonDoesNotExistException {
-        var father1 = repository.findById(id1).orElseThrow(PersonDoesNotExistException::new).getFather();
-        var father2 = repository.findById(id2).orElseThrow(PersonDoesNotExistException::new).getFather();
+        var father1 = repository.findById(id1).orElseThrow(() -> new PersonDoesNotExistException(id1)).getFather();
+        var father2 = repository.findById(id2).orElseThrow(() -> new PersonDoesNotExistException(id2)).getFather();
 
         if (Objects.isNull(father1) || Objects.isNull(father2)) return Optional.empty();
         if (Objects.equals(father1, father2)) return Optional.of(Relationship.BROTHER);
 
+        if (Objects.equals(father2, father1.getFather())) return Optional.of(Relationship.UNCLE);
+
         if (Objects.isNull(father1.getFather()) || Objects.isNull(father2.getFather())) return Optional.empty();
         if (Objects.equals(father1.getFather(), father2.getFather())) return Optional.of(Relationship.COUSIN);
-
-        if (Objects.equals(father2, father1.getFather())) return Optional.of(Relationship.UNCLE);
 
         return Optional.empty();
     }
@@ -71,9 +74,6 @@ public class PersonaService {
         var total = repository.count();
         if (countries.isEmpty()) return new ArrayList<>();
 
-        return countries.stream().map(c ->
-                new StatsDTO(c,
-                        (repository.countDistinctByCountry(c) * 1.0 / total) * 100
-                )).toList();
+        return countries.stream().map(c -> new StatsDTO(c, (repository.countDistinctByCountry(c) * 1.0 / total) * 100)).toList();
     }
 }

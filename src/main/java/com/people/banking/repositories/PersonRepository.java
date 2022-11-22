@@ -25,4 +25,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
 
     @Query(value = "select distinct country from people p", nativeQuery = true)
     List<String> getCountries();
+
+    @Query("UPDATE Person p SET p=?1 where p.id = ?2")
+    Person updateById(Person p, long id);
 }

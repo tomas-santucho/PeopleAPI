@@ -2,6 +2,8 @@ package com.people.banking.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -15,6 +17,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonSerialize
 @Table(name = "people")
 public class Person {
     @Id
@@ -28,7 +31,7 @@ public class Person {
     private String country;
     @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate bornDate;
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(cascade=CascadeType.ALL)
     @JsonIgnore
     @JoinColumn(name = "father_id")
     private Person father;

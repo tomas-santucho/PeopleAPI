@@ -23,24 +23,30 @@ public class PersonController {
     @PostMapping("/add")
     public ResponseEntity<?> add(@RequestBody Person persona) {
         try {
-            service.add(persona);
+            return ResponseEntity.ok().body(service.add(persona));
         } catch (UnderageException | RepeatedPersonException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return ResponseEntity.ok().body(persona);
     }
 
 
     @PutMapping("/update")
     public ResponseEntity<?> update(@RequestBody Person persona) {
-        service.update(persona);
-        return ResponseEntity.ok().body(persona);
+        try {
+            return ResponseEntity.ok().body(service.update(persona));
+        } catch (UnderageException | RepeatedPersonException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable long id) throws PersonDoesNotExistException {
-        service.delete(id);
-        return ResponseEntity.ok().body("Person with id: " + id + " deleted");
+    public ResponseEntity<?> delete(@PathVariable long id) {
+        try {
+            service.delete(id);
+            return ResponseEntity.ok().body("Person with id: " + id + " deleted");
+        } catch (PersonDoesNotExistException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/personas/{fatherId}/padre/{childId}")
